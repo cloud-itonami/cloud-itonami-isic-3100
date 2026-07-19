@@ -30,4 +30,7 @@
   :lint {:replace-deps {clj-kondo/clj-kondo {:mvn/version "2024.11.14"}}
          :main-opts    ["-m" "clj-kondo.main"
                         "--lint" "src" "test"
-                        "--fail-level" "error"]}}}
+                        "--fail-level" "error"]}
+  ;; clojure -M:dev:render-html -> build docs/samples/operator-console.html
+  ;; through the real actor (nightly regeneration, .github/workflows/regenerate.yml).
+  :render-html {:main-opts ["-m" "furnituremfg.render-html"]}}}
