@@ -1,0 +1,92 @@
+<html><head><meta charset="utf-8"><title>cloud-itonami-isic-3100 &middot; manufacture of furniture</title><style>
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.ok { color: #137a3f; }
+body { font-family: system-ui,-apple-system,sans-serif; margin: 0; color: #1a1a1a; background: #fafafa; }
+header.bar { display: flex; align-items: center; gap: 12px; padding: 12px 20px; background: #fff; border-bottom: 1px solid #e5e5e5; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #f0f0f0; }
+h2 { margin-top: 0; font-size: 15px; }
+.warn { color: #b25c00; background: #fff8e1; padding: 2px 6px; border-radius: 4px; }
+main { max-width: 980px; margin: 24px auto; padding: 0 20px; }
+header.bar h1 { font-size: 18px; margin: 0; font-weight: 600; }
+.muted { color: #888; font-size: 13px; }
+.critical { color: #fff; background: #b3261e; padding: 2px 6px; border-radius: 4px; font-weight: 600; }
+.card { background: #fff; border: 1px solid #e5e5e5; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+.err { color: #b3261e; background: #fbe9e7; padding: 2px 6px; border-radius: 4px; }
+th { font-weight: 600; color: #555; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+header.bar .badge { margin-left: auto; font-size: 12px; color: #666; }
+code { font-size: 12px; background: #f4f4f4; padding: 1px 4px; border-radius: 3px; }
+</style></head><body>
+<header class="bar">
+  <h1>Manufacture of furniture (ISIC 3100) — Operator Console</h1>
+  <span class="badge">read-only sample · governor-gated · maintenance/shipment coordination always human-approved</span>
+</header>
+<main>
+  <section class="card">
+    <h2>Production batches</h2>
+    <p class="muted">Demo snapshot — build-time-generated from <code>furnituremfg.store</code> via <code>furnituremfg.render-html</code> (<code>clojure -M:dev:render-html</code>), regenerated nightly.</p>
+    <table>
+      <thead><tr><th>Batch</th><th>Product</th><th>Grade</th><th>Unit count</th><th>Defect rate %</th><th>Verified?</th><th>Registered?</th><th>Shipped so far &middot; log status</th></tr></thead>
+      <tbody>
+        <tr><td>batch-001</td><td>dining-chair</td><td>grade-a</td><td>500.0</td><td>2.0</td><td>yes</td><td>yes</td><td>150.0 &middot; <span class="ok">committed</span></td></tr>
+        <tr><td>batch-002</td><td>oak-dresser</td><td>premium</td><td>80.0</td><td>0.5</td><td>yes</td><td>yes</td><td>75.0 &middot; <span class="muted">no activity</span></td></tr>
+        <tr><td>batch-003</td><td>office-desk</td><td>commercial</td><td>600.0</td><td>4.0</td><td>no</td><td>no</td><td>0.0 &middot; <span class="muted">no activity</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+  <section class="card">
+    <h2>Plant equipment</h2>
+    <p class="muted">Ground-truth verification/registration state the Governor independently re-checks before any maintenance may be scheduled.</p>
+    <table>
+      <thead><tr><th>Equipment</th><th>Kind</th><th>Verified?</th><th>Registered?</th><th>Last maintenance</th></tr></thead>
+      <tbody>
+        <tr><td>equip-001</td><td>cutting-saw</td><td>yes</td><td>yes</td><td>2026-05-01</td></tr>
+        <tr><td>equip-002</td><td>finishing-line</td><td>no</td><td>no</td><td>never</td></tr>
+      </tbody>
+    </table>
+  </section>
+  <section class="card">
+    <h2>Coordination requests (this run)</h2>
+    <p class="muted">Every maintenance-schedule / safety-concern / shipment-coordination proposal this demo issued, and what the Governor + phase gate actually did with it.</p>
+    <table>
+      <thead><tr><th>Request</th><th>Op</th><th>Target</th><th>Outcome</th></tr></thead>
+      <tbody>
+        <tr><td>mnt-1</td><td><code>schedule-maintenance</code></td><td>equip-001</td><td><span class="ok">committed</span></td></tr>
+        <tr><td>concern-1</td><td><code>flag-safety-concern</code></td><td>equip-001</td><td><span class="ok">committed</span></td></tr>
+        <tr><td>ship-1</td><td><code>coordinate-shipment</code></td><td>batch-001</td><td><span class="ok">committed</span></td></tr>
+        <tr><td>mnt-2</td><td><code>schedule-maintenance</code></td><td>equip-002</td><td><span class="critical">HARD hold &middot; equipment-not-verified</span></td></tr>
+        <tr><td>ship-2</td><td><code>coordinate-shipment</code></td><td>batch-003</td><td><span class="critical">HARD hold &middot; batch-not-verified</span></td></tr>
+        <tr><td>ship-3</td><td><code>coordinate-shipment</code></td><td>batch-002</td><td><span class="critical">HARD hold &middot; shipment-units-exceeded</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+  <section class="card">
+    <h2>Action gate (Furniture Plant Operations Governor)</h2>
+    <p class="muted">HARD holds cannot be overridden. Equipment/batch verification is independently re-checked, never trusted from the proposal; shipment unit-counts are independently recomputed against the batch's own logged production output.</p>
+    <table>
+      <thead><tr><th>Op</th><th>Gate</th></tr></thead>
+      <tbody>
+        <tr><td><code>:log-production-batch</code></td><td><span class="ok">auto-commit when clean at phase 3 &middot; grade &amp; defect-rate independently validated</span></td></tr>
+        <tr><td><code>:schedule-maintenance</code></td><td><span class="warn">ALWAYS human approval &middot; equipment must be independently verified &amp; registered &middot; finalize permanently blocked</span></td></tr>
+        <tr><td><code>:flag-safety-concern</code></td><td><span class="warn">ALWAYS human approval (high-stakes), regardless of equipment/batch verification state</span></td></tr>
+        <tr><td><code>:coordinate-shipment</code></td><td><span class="warn">ALWAYS human approval &middot; batch must be independently verified &amp; registered &middot; unit-count independently recomputed against logged output</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+  <section class="card">
+    <h2>Audit ledger (this run)</h2>
+    <p class="muted">Append-only decision-fact log — every hold and commit this scenario produced.</p>
+    <table>
+      <thead><tr><th>Fact</th><th>Op</th><th>Subject</th><th>Basis</th></tr></thead>
+      <tbody>
+        <tr><td>committed</td><td><code>log-production-batch</code></td><td>batch-001</td><td>quality-grade, last-assessed</td></tr>
+        <tr><td>committed</td><td><code>schedule-maintenance</code></td><td>mnt-1</td><td>equip-001</td></tr>
+        <tr><td>committed</td><td><code>flag-safety-concern</code></td><td>concern-1</td><td>equip-001</td></tr>
+        <tr><td>committed</td><td><code>coordinate-shipment</code></td><td>ship-1</td><td>batch-001</td></tr>
+        <tr><td>governor-hold</td><td><code>schedule-maintenance</code></td><td>mnt-2</td><td>equipment-not-verified</td></tr>
+        <tr><td>governor-hold</td><td><code>coordinate-shipment</code></td><td>ship-2</td><td>batch-not-verified</td></tr>
+        <tr><td>governor-hold</td><td><code>coordinate-shipment</code></td><td>ship-3</td><td>shipment-units-exceeded</td></tr>
+      </tbody>
+    </table>
+  </section>
+</main>
+</body></html>
