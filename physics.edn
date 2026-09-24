@@ -1,0 +1,45 @@
+;; What this vertical's robot physically does, declared for
+;; kotoba.robotics.process (kotoba-lang/robotics). `kbb -M:dev:physics` runs it.
+;;
+;; README: a furniture factory runs cutting, joinery/assembly and
+;; finishing/upholstery lines, with heavy material handling named as a
+;; hazard. The physical work around that plant: an arm offloading cut
+;; carcass panels from the panel saw onto a stacking cart, a hot press curing
+;; the glue line of a face-glued two-ply panel, and an AMR moving cartoned
+;; furniture to the shipping dock.
+;;
+;; Every number without a cited source is marked `estimate` in its :basis.
+;; Replacing an estimate with a sourced value is this bot's growth work.
+{:physics/schema "itonami.physical-ai.spec.v1"
+ :repo "cloud-itonami/cloud-itonami-isic-3100"
+ :cases
+ [{:id :offload-cut-panel
+   :kind :manipulator
+   :procedure "offload arm picks a cut carcass panel from the panel-saw outfeed table and lays it on the stacking cart"
+   :params {:l1-m 0.80 :l2-m 0.70 :m1-kg 18.0 :m2-kg 12.0
+            :from [0.90 0.30] :to [0.50 -0.20] :duration-s 2.5 :steps 500}
+   :sweep {:param :payload-kg :values [5.0 10.0 15.0 25.0 35.0]}
+   :quantity :peak-tau1-nm
+   :limit {:max 600.0 :basis "estimate: continuous shoulder torque of a ~50 kg-payload palletising arm class"}
+   :boundary {:lo 1.0 :hi 150.0}}
+  {:id :face-glued-panel-hot-press
+   :kind :thermal
+   :procedure "hot press (120 C platens) cures the mid-plane glue line of a face-glued two-ply MDF panel; modelled as half the panel with an adiabatic (symmetry) back face, so the back face is the glue line"
+   :params {:conductivity-w-mk 0.14 :density-kg-m3 750.0 :specific-heat-j-kgk 1700.0
+            :t0-c 20.0 :t-hot-c 120.0 :front-fixed? true :h-back-w-m2k 0.0
+            :threshold-c 90.0 :duration-s 3600.0 :nodes 11}
+   :sweep {:param :thickness-m :values [0.006 0.008 0.0095 0.0125 0.015]}
+   :quantity :time-to-threshold-s
+   :limit {:max 600.0 :basis "estimate: 10-minute press cycle per load; the 90 C glue-line cure temperature is an estimate for a urea-formaldehyde glue"}
+   :boundary {:lo 0.003 :hi 0.03}}
+  {:id :cartoned-furniture-to-dock
+   :kind :transport
+   :procedure "AMR carries a cartoned wardrobe/sofa load (carton CoG 1.0 m) from the packing area to the shipping dock (80 m)"
+   :params {:mass-kg 250.0 :distance-m 80.0 :v-max-mps 1.2 :a-max-mps2 0.5
+            :brake-decel-mps2 0.8 :drive-force-n 700.0 :crr 0.015
+            :cog-height-m 0.35 :support-half-length-m 0.50 :payload-cog-height-m 1.00
+            :max-time-s 1800.0}
+   :sweep {:param :payload-kg :values [60.0 150.0 300.0 500.0 800.0]}
+   :quantity :cycle-time-s
+   :limit {:max 90.0 :basis "estimate: one dock run inside a 90-second truck-loading takt"}
+   :boundary {:lo 20.0 :hi 5000.0}}]}
